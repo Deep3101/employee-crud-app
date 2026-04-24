@@ -5,10 +5,7 @@ import com.employeeapp.util.DBConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,5 +49,55 @@ public class EmployeeDao {
             logger.error("Error while getting the employees", e);
         }
         return list;
+    }
+
+    public Employee getEmployeeById(long id) {
+        Employee employee = null;
+        try (Connection connection = DBConnection.getConnection()) {
+            String query = "SELECT * FROM employee WHERE id=?";
+            PreparedStatement ps = connection.prepareStatement(query);
+            ps.setLong(1, id);
+
+            ResultSet resultSet = ps.executeQuery();
+
+            if (resultSet.next()) {
+                employee = new Employee();
+                employee.setId(resultSet.getLong("id"));
+                employee.setName(resultSet.getString("name"));
+                employee.setEmail(resultSet.getString("email"));
+                employee.setDepartment(resultSet.getString("department"));
+            }
+            logger.info("Employee fetched Successfully with id = " + id);
+        } catch (SQLException e) {
+            logger.error("Error while getting employee data for id = " + id, e);
+        }
+        return employee;
+    }
+
+    public void deleteEmployee(long id) {
+        try (Connection connection = DBConnection.getConnection()) {
+            String query = "DELETE FROM employee WHERE id=?";
+            PreparedStatement ps = connection.prepareStatement(query);
+            ps.setLong(1, id);
+            ps.executeUpdate();
+            logger.info("Employee Deleted Successfully with id = " + id);
+        } catch (SQLException e) {
+            logger.error("Error while Deleting the employee with id = " + id, e);
+        }
+    }
+
+    public void updateEmployee(Employee employee) {
+        try (Connection connection = DBConnection.getConnection()) {
+            String query = "UPDATE employee SET name=?, email=?, department=? WHERE id=?";
+            PreparedStatement ps = connection.prepareStatement(query);
+            ps.setString(1, employee.getName());
+            ps.setString(2, employee.getEmail());
+            ps.setString(3, employee.getDepartment());
+            ps.setLong(4, employee.getId());
+            ps.executeUpdate();
+            logger.info("Employee updated successfully");
+        } catch (SQLException e) {
+            logger.error("Error while updating employee", e);
+        }
     }
 }
